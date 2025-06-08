@@ -1,103 +1,205 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+type Pilihan = {
+  id: string;
+  label: string;
+};
+
+const PILIHAN_LAIN: Pilihan[] = [
+  { id: "tidak", label: "Nggak Mau 🙅‍♀️" },
+  { id: "lain", label: "Lain Kali 💁‍♀️" },
+  { id: "sibuk", label: "Lagi Sibuk 🏃‍♀️" },
+  { id: "boker", label: "Lagi Kerja 🚽" },
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [offsets, setOffsets] = useState<
+    Record<string, { x: number; y: number }>
+  >({});
+  const [showLove, setShowLove] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(0);
+  const [showWaktu, setShowWaktu] = useState(false);
+  const [selectedTime, setSelectedTime] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setWindowWidth(window.innerWidth);
+    }
+  }, []);
+
+  const handleKabur = (id: string) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.random() * rect.width - rect.width / 2;
+    const y = Math.random() * rect.height - rect.height / 2;
+
+    setOffsets((prev) => ({ ...prev, [id]: { x, y } }));
+    setTimeout(() => {
+      setOffsets((prev) => ({ ...prev, [id]: { x: 0, y: 0 } }));
+    }, 3000);
+  };
+
+  const handleMau = () => {
+    setShowLove(true);
+    setTimeout(() => {
+      setShowWaktu(true);
+    }, 1500);
+  };
+
+  const handlePilihWaktu = () => {
+    if (!selectedTime) return;
+    const nomor = "6283898165407"; // ganti nomor jika perlu
+    const pesan = encodeURIComponent(
+      `Hai, aku pilih ketemuan di kos jam ${selectedTime} ya! ❤️`
+    );
+    const link = `https://wa.me/${nomor}?text=${pesan}`;
+    window.open(link, "_blank");
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center bg-gradient-to-br from-sky-100 to-pink-200 p-4 text-center"
+    >
+      {/* Langit Dekorasi */}
+      <div className="absolute top-10 right-10 w-24 h-24 rounded-full bg-yellow-300 animate-spin-slow z-0" />
+      <div className="absolute top-20 left-[-100px] w-full flex gap-10 animate-clouds z-0">
+        <div className="w-32 h-16 bg-white rounded-full opacity-70 blur-sm" />
+        <div className="w-24 h-12 bg-white rounded-full opacity-60 blur-sm" />
+        <div className="w-40 h-20 bg-white rounded-full opacity-50 blur-sm" />
+      </div>
+
+      <h1 className="text-3xl font-bold text-pink-700 mb-6 z-10">
+        Sayangku Putri , mau ketemuan nggak ? 🥺
+      </h1>
+
+      {/* Tombol Pilihan */}
+      <div className="flex flex-wrap justify-center gap-4 z-10">
+        {PILIHAN_LAIN.map((p) => (
+          <motion.button
+            key={p.id}
+            onClick={() => handleKabur(p.id)}
+            animate={{
+              x: offsets[p.id]?.x || 0,
+              y: offsets[p.id]?.y || 0,
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="px-6 py-3 rounded-2xl text-lg text-black bg-white shadow hover:bg-gray-200"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            {p.label}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Tombol Mau */}
+      <div className="z-20 mt-6">
+        <button
+          className="animate-bounce bg-pink-500 text-white px-6 py-3 rounded-2xl text-lg hover:bg-pink-600 transition-all duration-300"
+          onClick={handleMau}
+        >
+          Mau ❤️
+        </button>
+      </div>
+
+      {/* Efek & Amplop */}
+      <AnimatePresence>
+        {showLove && (
+          <>
+            {Array.from({ length: 30 }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ y: -100, x: 0, opacity: 0.8 }}
+                animate={{ y: "100vh", opacity: 0 }}
+                transition={{
+                  duration: 3 + Math.random(),
+                  delay: i * 0.1,
+                  repeat: Infinity,
+                }}
+                className="fixed top-0 left-0 text-pink-400 text-2xl select-none pointer-events-none z-0"
+                style={{
+                  left: `${Math.random() * windowWidth}px`,
+                }}
+              >
+                💖
+              </motion.div>
+            ))}
+
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{
+                scale: [1, 1.1, 1],
+                rotate: [0, 2, -2, 0],
+              }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-xl shadow-xl z-20 w-72"
+            >
+              <div className="text-4xl mb-2">💌</div>
+              <p className="text-pink-700 font-medium">
+                Makasih ya Sayangku Putri, udah mau ketemuan.
+                <br />
+                Aku tunggu, jangan lupa senyum ya 😊
+              </p>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Input Waktu Ketemuan */}
+      <AnimatePresence>
+        {showWaktu && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-white shadow-xl rounded-2xl px-6 py-4 z-30"
+          >
+            <p className="text-pink-700 font-semibold mb-2">
+              Pilih jam ketemuannya ya 😍
+            </p>
+            <input
+              type="time"
+              value={selectedTime}
+              onChange={(e) => setSelectedTime(e.target.value)}
+              className="border border-pink-300 rounded-lg px-4 py-2 text-pink-700"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <button
+              onClick={handlePilihWaktu}
+              className="mt-3 bg-pink-500 text-white px-4 py-2 rounded-xl hover:bg-pink-600"
+            >
+              Kirim ke WhatsApp 💌
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tailwind Custom Animations */}
+      <style jsx>{`
+        .animate-spin-slow {
+          animation: spin 20s linear infinite;
+        }
+        .animate-clouds {
+          animation: clouds 60s linear infinite;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        @keyframes clouds {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </div>
   );
 }
